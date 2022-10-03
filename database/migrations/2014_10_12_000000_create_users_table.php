@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('email');
             $table->string('Username');
             $table->string('password');
-            $table->integer('mobile');
+            $table->string('mobile');
             $table->string('address');
             $table->boolean('is_vendor')->default(false);
             $table->timestamps();

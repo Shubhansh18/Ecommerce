@@ -2,7 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UserValidation;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 
 class UserController extends Controller
 {
@@ -21,9 +25,9 @@ class UserController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create()
+    public function create(Request $request)
     {
-        //
+       //
     }
 
     /**
@@ -32,9 +36,23 @@ class UserController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(UserValidation $request)
     {
-        //
+        $data = [
+            'name'=>$request->name,
+            'email'=>$request->email,
+            'Username'=>$request->Username,
+            'mobile'=>$request->mobile,
+            'address'=>$request->address
+        ];
+        $userdata = JWT::encode($data, 'secret', 'HS256');
+        $password = $data['Username'];
+        $data['password']= $password;
+        User::create($data);
+        return response()->json([
+            "message" => "Registration Successful. Pease keep the mentioned registration token safe with you.",
+            "token" => $userdata
+        ]);
     }
 
     /**
