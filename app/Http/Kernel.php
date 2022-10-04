@@ -50,6 +50,10 @@ class Kernel extends HttpKernel
 
         'AdminCheck' => [
             \App\Http\Middleware\AdminAccess::class
+        ],
+
+        'VendorCheck' => [
+            \App\Http\Middleware\VendorAccess::class
         ]
     ];
 

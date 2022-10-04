@@ -2,6 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ProductValidation;
+use App\Models\Products;
+use App\Models\User;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
@@ -11,9 +16,23 @@ class ProductController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $allproducts = Products::where(function ($query) use ($request) {
+            if($request->has('catagory')){
+                $query->where('catagory', $request->catagory);
+            }
+            if($request->has('product_name')){
+                $query->where('product_name', $request->product_name);
+            }
+            if($request->has('quantity')){
+                $query->where('quantity', '>=', $request->quantity);
+            }
+            if($request->has('price')){
+                $query->where('price', '<=', $request->price);
+            }
+        })->get();
+        return $allproducts;
     }
 
     /**
@@ -32,9 +51,26 @@ class ProductController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(ProductValidation $request)
     {
-        //
+        $token = $request->header('Authorization');
+        $userdata = JWT::decode($token, new Key('secret', 'HS256'));
+        $user = User::where('username', $userdata->username)->first();
+        $data = $request->except('user_id');
+        $data['user_id'] = $user->id;
+        $productexist = Products::where('user_id', $user->id)
+                                ->where('product_name', $data['product_name'])
+                                ->where('catagory',$data['catagory'])->first();
+        if($productexist)
+        {
+            $productexist->quantity += $data['quantity']; 
+            $productexist->save();
+            return $productexist;
+        }
+        else{
+            $product = Products::create($data);
+            return $product;
+        }
     }
 
     /**
@@ -45,7 +81,14 @@ class ProductController extends Controller
      */
     public function show($id)
     {
-        //
+        $product = Products::find($id);
+        if(empty($product))
+        {
+            return response()->json([
+                "message" => "Invalid Product id mentioned in url"
+            ]);
+        }
+        return($product);
     }
 
     /**
@@ -68,7 +111,25 @@ class ProductController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $token = $request->header('Authorization');
+        $userdata = JWT::decode($token, new Key('secret', 'HS256'));
+        $user = User::where('username', $userdata->username)->first();
+        $product = Products::find($id);
+        if(empty($product))
+        {
+            return response()->json([
+                "message" => "Invalid Product id mentioned in url"
+            ]);
+        }
+        if($product->user_id == $user->id)
+        {
+            $data = $request->all();
+            $product->update($data);
+            return $product;
+        }
+        return response()->json([
+            "message" => "You cannot edit this product as it does not belong to you"
+        ]);
     }
 
     /**
@@ -77,8 +138,25 @@ class ProductController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
-        //
+        $token = $request->header('Authorization');
+        $userdata = JWT::decode($token, new Key('secret', 'HS256'));
+        $user = User::where('username', $userdata->username)->first();
+        $product = Products::find($id);
+        if(empty($product))
+        {
+            return response()->json([
+                "message" => "Invalid Product id mentioned in url"
+            ]);
+        }
+        if($product->user_id == $user->id)
+        {
+            $product->delete();
+            return "Product deleted";
+        }
+        return response()->json([
+            "message" => "You cannot delete this product as it does not belong to you"
+        ]);
     }
 }

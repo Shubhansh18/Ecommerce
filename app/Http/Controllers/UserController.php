@@ -5,10 +5,11 @@ namespace App\Http\Controllers;
 use App\Http\Requests\UserUpdateValidation;
 use App\Http\Requests\UserValidation;
 use App\Models\User;
+use App\Models\Vendor;
 use Illuminate\Http\Request;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
-use Illuminate\Support\Facades\Redis;
+
 
 class UserController extends Controller
 {
@@ -129,11 +130,26 @@ class UserController extends Controller
                     "message" => "Cannot Update this data"
                 ]);
             }
-            $userdata->update($request->all());
-            return response()->json([
-                "message" => "User Updated Successfully",
-                $userdata
-            ]);
+            $data = $request->all();
+            if($request->is_vendor == (0))
+            {
+                $vendor = Vendor::where('user_id', $id)->first();
+                $vendor->update(['status' => 'pending']);
+                $userdata->update($data);
+                return response()->json([
+                    "message" => "User Updated Successfully",
+                    $userdata
+                ]);
+            }
+            else{
+                $vendor = Vendor::where('user_id', $id)->first();
+                $vendor->update(['status' => 'approved']);
+                $userdata->update($data);
+                return response()->json([
+                    "message" => "User Updated Successfully",
+                    $userdata
+                ]);
+            } 
         }
     }
 
@@ -179,5 +195,28 @@ class UserController extends Controller
                 "message" => "Password changed successfully"
             ]);
         }
+    }
+    
+    public function makevendor(Request $request)
+    {
+        $token = $request->header('Authorization');
+        $userdata = JWT::decode($token, new Key('secret', 'HS256'));
+        $user = User::where('username', $userdata->username)->first('id');
+        $rq = Vendor::where('user_id', $user->id)->first();
+
+        if(empty($rq))
+        {
+            $vrequest = Vendor::create(
+                [
+                    'user_id' => $user->id
+                ]);
+            return response()->json([
+                "message" => "Your request is submitted and will be approved shortly",
+                $vrequest
+            ]);
+        }
+        return response()->json([
+            "message" => "You have already made a request"
+        ]);
     }
 }

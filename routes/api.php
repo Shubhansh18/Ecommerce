@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -25,8 +26,14 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::group(['middleware' => 'UserCheck'], function(){
     Route::resource('/users', UserController::class)->only('destroy');
+    Route::get('/vendorrequest', [UserController::class, 'makevendor']);
+    Route::resource('/products', ProductController::class)->only('index', 'show');
 });
 
 Route::group(['middleware' => 'AdminCheck'], function(){
     Route::resource('/users', UserController::class)->except('store', 'getJWT','destroy');
+});
+
+Route::group(['middleware' => 'VendorCheck'], function(){
+    Route::resource('/products', ProductController::class)->except('index', 'show');
 });
