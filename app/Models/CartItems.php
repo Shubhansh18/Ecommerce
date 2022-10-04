@@ -12,9 +12,9 @@ class CartItems extends Model
     protected $fillable = [
         'user_id',
         'product_id',
-        'Order_amount',
-        'Payment_mode',
-        'Status',
-        'Expected_arrival'
+        'order_amount',
+        'payment_mode',
+        'status',
+        'expected_arrival'
     ];
 }

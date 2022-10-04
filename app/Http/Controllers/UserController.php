@@ -2,14 +2,42 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UserUpdateValidation;
 use App\Http\Requests\UserValidation;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
+use Illuminate\Support\Facades\Redis;
 
 class UserController extends Controller
 {
+    /**
+     * Regenerate JWT if lost.
+     */
+    public function getJWT(Request $request)
+    {
+        $username = $request->username;
+        $password = $request->password;
+
+        $user = User::where('username',$username)->where('password',$password)->first();
+        if(empty($user))
+        {
+            return response()->json([
+                "message" => "invalid credentials"
+            ]);
+        }
+        $data = [
+            'name'=>$user->name,
+            'email'=>$user->email,
+            'username'=>$user->username,
+            'mobile'=>$user->mobile,
+            'address'=>$user->address
+        ]; 
+        $userdata = JWT::encode($data,'secret','HS256');
+        return $userdata;
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -17,7 +45,7 @@ class UserController extends Controller
      */
     public function index()
     {
-        //
+        return User::all();
     }
 
     /**
@@ -41,17 +69,17 @@ class UserController extends Controller
         $data = [
             'name'=>$request->name,
             'email'=>$request->email,
-            'Username'=>$request->Username,
+            'username'=>$request->username,
             'mobile'=>$request->mobile,
             'address'=>$request->address
         ];
-        $userdata = JWT::encode($data, 'secret', 'HS256');
-        $password = $data['Username'];
+        $userdata = JWT::encode($data,'secret','HS256');
+        $password = $data['username'];
         $data['password']= $password;
         User::create($data);
         return response()->json([
-            "message" => "Registration Successful. Pease keep the mentioned registration token safe with you.",
-            "token" => $userdata
+            "message" => "Registration Successful. Pease keep the mentioned Auth_key safe with you.",
+            "Auth_key" => $userdata
         ]);
     }
 
@@ -63,7 +91,8 @@ class UserController extends Controller
      */
     public function show($id)
     {
-        //
+        $user = User::find($id);
+        return $user;
     }
 
     /**
@@ -84,9 +113,28 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(UserUpdateValidation $request, $id)
     {
-        //
+        $userdata = User::find($id);
+        if(empty($userdata))
+        {
+            return response()->json([
+                "message" => "User not found"
+            ]);
+        }
+        else{
+            if($userdata->username == "Shubhansh18g")
+            {
+                return response()->json([
+                    "message" => "Cannot Update this data"
+                ]);
+            }
+            $userdata->update($request->all());
+            return response()->json([
+                "message" => "User Updated Successfully",
+                $userdata
+            ]);
+        }
     }
 
     /**
@@ -95,8 +143,41 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Request $request)
     {
-        //
+        $token = $request->header('Authorization');
+        $userdata = JWT::decode($token, new Key('secret', 'HS256'));
+        if($userdata->username == "Shubhansh18g")
+        {
+            return response()->json([
+                "message" => "Admin cannot be deleted"
+            ]);
+        }
+        $user = User::where('username', $userdata->username);
+        $user->delete();
+            return response()->json([
+                "message" => "User Deleted"
+            ]);
+    }
+
+    public function changePass(Request $request)
+    {
+        $username = $request->username;
+        $oldpassword = $request->old_password;
+        $newpassword = $request->new_password;
+
+        $user = User::where('username', $username)->where('password', $oldpassword)->first();
+        if(empty($user))
+        {
+            return response()->json([
+                "message"=> "Invalid credentials"
+            ]);
+        }
+        else{
+            $user->update([$user->password = $newpassword]);
+            return response()->json([
+                "message" => "Password changed successfully"
+            ]);
+        }
     }
 }

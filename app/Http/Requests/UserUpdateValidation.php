@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UserValidation extends FormRequest
+class UserUpdateValidation extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,11 +24,10 @@ class UserValidation extends FormRequest
     public function rules()
     {
         return [
-            "name"=>'required|regex:/([A-Za-z])+( [A-Za-z]+)/',
-            "email"=>'required|email|unique:users',
-            "username"=>'required|unique:users|regex:/[A-Z]{1}[a-z]*[0-9]{1,}[a-z]*/',
-            "mobile"=>'required|max:10|min:10|regex:/[6789][0-9]{9}/',
-            "address"=>'required'
+            "name"=>'regex:/([A-Za-z])+( [A-Za-z]+)/',
+            "email"=>'email|unique:users',
+            "username"=>'unique:users|regex:/[A-Z]{1}[a-z]*[0-9]{1,}[a-z]*/',
+            "mobile"=>'max:10|min:10|regex:/[6789][0-9]{9}/',
         ];
     }
 }

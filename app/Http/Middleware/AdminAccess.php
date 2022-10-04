@@ -2,7 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
 use Closure;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 use Illuminate\Http\Request;
 
 class AdminAccess
@@ -16,6 +19,22 @@ class AdminAccess
      */
     public function handle(Request $request, Closure $next)
     {
-        return $next($request);
+        $token = $request->header('Authorization');
+        if($token==null)
+        {
+            return response()->json([
+                "message" => "Please enter your Auth_key"
+            ]);
+        }
+        $tokendata = JWT::decode($token, new Key('secret', 'HS256'));
+        if($tokendata->username == "Shubhansh18g")
+        {
+            return $next($request);
+        }
+        else{
+            return response()->json([
+                "message" => "Unauthorized Access"
+            ]);
+        }
     }
 }

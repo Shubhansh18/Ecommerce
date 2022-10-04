@@ -20,10 +20,14 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
-        'Username',
+        'username',
         'password',
         'mobile',
         'address',
         'is_vendor'
+    ];
+
+    protected $casts = [
+        'is_vendor' => 'boolean',
     ];
 }

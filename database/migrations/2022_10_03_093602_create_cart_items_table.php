@@ -17,10 +17,11 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id');
             $table->foreignId('product_id');
-            $table->integer('Order_amount');
-            $table->string('Payment_mode');
-            $table->string('Status');
-            $table->datetime('Expected_arrival');
+            $table->integer('quantity');
+            $table->integer('order_amount');
+            $table->string('payment_mode');
+            $table->string('status');
+            $table->datetime('expected_arrival');
             $table->timestamps();
         });
     }
