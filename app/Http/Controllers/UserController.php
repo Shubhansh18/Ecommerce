@@ -131,9 +131,17 @@ class UserController extends Controller
                 ]);
             }
             $data = $request->all();
-            if($request->is_vendor == (0))
+            if($request->is_vendor == 0)
             {
                 $vendor = Vendor::where('user_id', $id)->first();
+                if($vendor == null)
+                {
+                    $userdata->update($data);
+                    return response()->json([
+                        "message" => "User Updated Successfully",
+                        $userdata
+                    ]);
+                }
                 $vendor->update(['status' => 'pending']);
                 $userdata->update($data);
                 return response()->json([
@@ -143,6 +151,13 @@ class UserController extends Controller
             }
             else{
                 $vendor = Vendor::where('user_id', $id)->first();
+                if($vendor == null)
+                {
+                    return response()->json([
+                        "message" => "This user has not requested for vendor access",
+                        $userdata
+                    ]);
+                }
                 $vendor->update(['status' => 'approved']);
                 $userdata->update($data);
                 return response()->json([
