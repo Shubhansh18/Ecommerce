@@ -216,22 +216,28 @@ class UserController extends Controller
     {
         $token = $request->header('Authorization');
         $userdata = JWT::decode($token, new Key('secret', 'HS256'));
-        $user = User::where('username', $userdata->username)->first('id');
+        $user = User::where('username', $userdata->username)->first();
         $rq = Vendor::where('user_id', $user->id)->first();
-
-        if(empty($rq))
-        {
-            $vrequest = Vendor::create(
-                [
-                    'user_id' => $user->id
-                ]);
+        if($user->is_vendor){
             return response()->json([
-                "message" => "Your request is submitted and will be approved shortly",
-                $vrequest
+                "message" => "You are already a vendor"
             ]);
         }
-        return response()->json([
-            "message" => "You have already made a request"
-        ]);
+        else{
+            if(empty($rq))
+            {
+                $vrequest = Vendor::create(
+                    [
+                        'user_id' => $user->id
+                    ]);
+                return response()->json([
+                    "message" => "Your request is submitted and will be approved shortly",
+                    $vrequest
+                ]);
+            }
+            return response()->json([
+                "message" => "You have already made a request"
+            ]);
+        }
     }
 }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
@@ -28,6 +29,7 @@ Route::group(['middleware' => 'UserCheck'], function(){
     Route::resource('/users', UserController::class)->only('destroy');
     Route::get('/vendorrequest', [UserController::class, 'makevendor']);
     Route::resource('/products', ProductController::class)->only('index', 'show');
+    Route::resource('/cart', OrderController::class);
 });
 
 Route::group(['middleware' => 'AdminCheck'], function(){
