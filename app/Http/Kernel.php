@@ -46,14 +46,6 @@ class Kernel extends HttpKernel
 
         'UserCheck' => [
             \App\Http\Middleware\UserAccess::class
-        ],
-
-        'AdminCheck' => [
-            \App\Http\Middleware\AdminAccess::class
-        ],
-
-        'VendorCheck' => [
-            \App\Http\Middleware\VendorAccess::class
         ]
     ];
 
@@ -75,5 +67,7 @@ class Kernel extends HttpKernel
         'signed' => \App\Http\Middleware\ValidateSignature::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
+        'AdminCheck' => \App\Http\Middleware\AdminAccess::class,
+        'VendorCheck' => \App\Http\Middleware\VendorAccess::class
     ];
 }

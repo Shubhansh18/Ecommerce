@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\UserController;
@@ -30,12 +31,10 @@ Route::group(['middleware' => 'UserCheck'], function(){
     Route::get('/vendorrequest', [UserController::class, 'makevendor']);
     Route::resource('/products', ProductController::class)->only('index', 'show');
     Route::resource('/cart', CartController::class);
+    Route::resource('/order', OrderController::class)->except('update');
 });
 
-Route::group(['middleware' => 'AdminCheck'], function(){
-    Route::resource('/users', UserController::class)->except('store', 'getJWT','destroy');
-});
+Route::resource('/users', UserController::class)->except('store', 'getJWT','destroy')->middleware('AdminCheck');
+Route::resource('/order', OrderController::class)->only('update')->middleware(('AdminCheck'));
+Route::resource('/products', ProductController::class)->except('index', 'show')->middleware('VendorCheck');
 
-Route::group(['middleware' => 'VendorCheck'], function(){
-    Route::resource('/products', ProductController::class)->except('index', 'show');
-});

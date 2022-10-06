@@ -236,7 +236,7 @@ class UserController extends Controller
                 ]);
             }
             return response()->json([
-                "message" => "You have already made a request"
+                "message" => "You have already made a request, please wait for approval"
             ]);
         }
     }

@@ -104,7 +104,7 @@ class CartController extends Controller
         $token = $request->header('Authorization');
         $userdata = JWT::decode($token, new Key('secret', 'HS256'));
         $user = User::where('username', $userdata->username)->first();
-        $cartitem = CartItems::where('user_id', $user->id)->where('product_id', $id)->first();
+        $cartitems = CartItems::where('user_id', $user->id)->where('product_id', $id)->first();
         $product = Products::where('id', $id)->first();
         if(empty($product))
         {
@@ -112,20 +112,25 @@ class CartController extends Controller
                 "message" => "product_id is not valid"
             ]);
         }
-        if(empty($cart))
-        {
-            return response()->json([
-                "message" => $product->product_name. " is/are not added in your cart"
-            ]);
-        }
         else{
-            $data = $request->quantity;
-            if($data['quantity'] == 0)
+            if(empty($cartitems))
             {
-                $cartitem->delete();
+                return response()->json([
+                    "message" => $product->product_name. " is|are not added in your cart"
+                ]);
             }
-            $cartitem->update($request->quantity);
-            return $cartitem;
+            else{
+                $data = ['quantity' => $request->quantity];
+                if($data['quantity'] == 0)
+                {
+                    $cartitems->delete();
+                    return response()->json([
+                        "message" => "Product is deleted from your cart"
+                    ]);
+                }
+                $cartitems->update($data);
+                return $cartitems;
+            }
         }
     }
 
