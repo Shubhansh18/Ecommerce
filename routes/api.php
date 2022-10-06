@@ -29,7 +29,7 @@ Route::group(['middleware' => 'UserCheck'], function(){
     Route::resource('/users', UserController::class)->only('destroy');
     Route::get('/vendorrequest', [UserController::class, 'makevendor']);
     Route::resource('/products', ProductController::class)->only('index', 'show');
-    Route::resource('/cart', OrderController::class);
+    Route::resource('/cart', CartController::class);
 });
 
 Route::group(['middleware' => 'AdminCheck'], function(){
