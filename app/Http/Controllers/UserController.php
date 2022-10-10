@@ -80,6 +80,7 @@ class UserController extends Controller
         User::create($data);
         return response()->json([
             "message" => "Registration Successful. Pease keep the mentioned Auth_key safe with you.",
+            "alert" => "Your password has been set same as your username, please change it soon",
             "Auth_key" => $userdata
         ]);
     }

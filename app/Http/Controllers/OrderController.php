@@ -49,38 +49,18 @@ class OrderController extends Controller
         $token = $request->header('Authorization');
         $userdata = JWT::decode($token, new Key('secret', 'HS256'));
         $user = User::where('username', $userdata->username)->first();
-        $cartitems = CartItems::where('user_id', $user->id)->where('id', $request->cart_id)->first();
+        $cartitems = CartItems::where('user_id', $user->id)->pluck('amount')->toArray();
         if(empty($cartitems))
         {
             return response()->json([
-                "message" => "please enter a valid cart_id"
+                "message" => "please add items in your cart to order"
             ]);
         }
         else{
-            $products = Products::where('id', $cartitems->product_id)->first();
-            if($products->quantity == 0)
-            {
-                return response()->json([
-                    "message" => "this product is out of stock"
-                ]);
-            }
-            else{
-                if($cartitems->quantity > $products->quantity)
-                {
-                    return response()->json([
-                        "message" => "Can't place this order because the quantity of ". $products->product_name." you ordered is not available",
-                        "Quantity in stock" => $products->quantity,
-                        "Suggestion" => "please update quantity in your cart to be within the range of quantity in stock"
-                    ]);
-                }
-                else{
-                    $data = ['cart_id' => $cartitems->id, 'user_id' => $user->id, 'quantity' => $cartitems->quantity, 'order_amount' => ($products->price)*($cartitems->quantity), 'expected_arrival' => Carbon::now()->addDays(7)];
-                    $products->quantity -= $cartitems->quantity;
-                    $products->save();
-                    $order = Order::create($data);
-                    return $order;
-                }
-            }
+            $price = array_sum($cartitems);
+            $data = ['user_id' => $user->id, 'order_amount' => $price, 'expected_arrival' => Carbon::now()->addDays(7)];
+            $order = Order::create($data);
+            return $order;
         }
     }
 

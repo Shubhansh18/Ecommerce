@@ -17,7 +17,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id');
             $table->string('product_name');
-            $table->integer('quantity');
+            $table->integer('quantity_available');
             $table->string('catagory');
             $table->integer('price');
             $table->timestamps();

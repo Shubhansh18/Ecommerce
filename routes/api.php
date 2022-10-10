@@ -3,6 +3,7 @@
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\TestController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -22,6 +23,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+    Route::get('/cartitems', [TestController::class, 'index']);
     Route::resource('/users', UserController::class)->only('store');
     Route::get('/gettoken', [UserController::class, 'getJWT']);
     Route::post('/password', [UserController::class, 'changePass']);
@@ -37,4 +39,3 @@ Route::group(['middleware' => 'UserCheck'], function(){
 Route::resource('/users', UserController::class)->except('store', 'getJWT','destroy')->middleware('AdminCheck');
 Route::resource('/order', OrderController::class)->only('update')->middleware(('AdminCheck'));
 Route::resource('/products', ProductController::class)->except('index', 'show')->middleware('VendorCheck');
-

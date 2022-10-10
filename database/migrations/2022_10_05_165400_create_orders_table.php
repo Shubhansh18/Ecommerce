@@ -15,9 +15,7 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('cart_id');
             $table->foreignId('user_id');
-            $table->integer('quantity');
             $table->integer('order_amount');
             $table->string('payment_mode')->default("Pay on delivery");
             $table->datetime('expected_arrival')->nullable();

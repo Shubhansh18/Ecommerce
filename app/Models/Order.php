@@ -14,12 +14,10 @@ class Order extends Model
     protected $table = 'orders';
 
     protected $fillable = [
-        'cart_id',
         'user_id',
-        'quantity',
         'order_amount',
         'payment_mode',
-        'delivered_at',
-        'expected_arrival'
+        'expected_arrival',
+        'delivered_at'
     ];
 }

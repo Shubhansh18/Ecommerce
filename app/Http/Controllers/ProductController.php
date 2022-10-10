@@ -123,7 +123,7 @@ class ProductController extends Controller
         }
         if($product->user_id == $user->id)
         {
-            $data = $request->all();
+            $data = $request->except('product_name');
             $product->update($data);
             return $product;
         }

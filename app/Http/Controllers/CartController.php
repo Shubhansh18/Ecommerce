@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CartUpdateValidation;
 use App\Http\Requests\CartValidation;
 use App\Models\CartItems;
 use App\Models\Products;
@@ -9,6 +10,7 @@ use App\Models\User;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 
 class CartController extends Controller
 {
@@ -54,16 +56,43 @@ class CartController extends Controller
         $userdata = JWT::decode($token, new Key('secret', 'HS256'));
         $user = User::where('username', $userdata->username)->first();
         $data = $request->only('product_id', 'quantity');
+        $products = Products::where('id', $data['product_id'])->first();
         $data['user_id']=$user->id;
-        $cartitems = CartItems::where('product_id', $data['product_id'])->where('user_id', $data['user_id'])->first();
-        if(empty($cartitems))
+        if($products->quantity_available == 0)
         {
-            $cart = CartItems::create($data);
-            return $cart;
+            return response()->json([
+                "message" => "this product is out of stock"
+            ]);
         }
-        $cartitems->quantity += $data['quantity'];
-        $cartitems->save();
-        return $cartitems;
+        if($products->quantity_available < $data['quantity'])
+        {
+            return response()->json([
+                "message" => "Mentioned quantity of ". $products->product_name." is not in stock.",
+                "Quantity in stock" => $products->quantity_available,
+                "Suggestion" => "Please try reducing the quantity!"
+            ]);
+        }
+        else{
+            $cartitems = CartItems::where('product_id', $data['product_id'])->where('user_id', $data['user_id'])->first();
+            $data['amount']= ($products->price)*($data['quantity']);
+            if(empty($cartitems))
+            {
+                $cart = CartItems::create($data);
+                return $cart;
+            }
+            $cartitems->quantity += $data['quantity'];
+            if($cartitems->quantity > $products->quantity_available)
+            {
+                return Response()->json([
+                    "message" => "Mentioned quantity of ". $products->product_name." is not in stock.",
+                    "Quantity in stock" => $products->quantity_available,
+                    "Suggestion" => "Please try reducing the quantity!"
+                ]);
+            }
+            $cartitems->amount = ($products->price) * $cartitems->quantity;
+            $cartitems->save();
+            return $cartitems;
+        }
     }
 
     /**
@@ -99,7 +128,7 @@ class CartController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(CartUpdateValidation $request, $id)
     {
         $token = $request->header('Authorization');
         $userdata = JWT::decode($token, new Key('secret', 'HS256'));
@@ -116,7 +145,7 @@ class CartController extends Controller
             if(empty($cartitems))
             {
                 return response()->json([
-                    "message" => $product->product_name. " is|are not added in your cart"
+                    "message" => $product->product_name. " is\are not added in your cart"
                 ]);
             }
             else{
@@ -128,6 +157,16 @@ class CartController extends Controller
                         "message" => "Product is deleted from your cart"
                     ]);
                 }
+                if($data['quantity'] > $product->quantity_available)
+                {
+                    return Response()->json([
+                        "message" => "Mentioned quantity of ". $product->product_name." is not in stock.",
+                        "Quantity in stock" => $product->quantity_available,
+                        "Suggestion" => "Please try reducing the quantity!"
+                    ]);
+                }
+                $cartitems->cart_amount = ($product->price) * $data['quantity'];
+                $cartitems->save();
                 $cartitems->update($data);
                 return $cartitems;
             }
