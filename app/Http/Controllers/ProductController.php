@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\FilterRequest;
 use App\Http\Requests\ProductValidation;
 use App\Models\Products;
 use App\Models\User;
@@ -16,7 +17,7 @@ class ProductController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(Request $request)
+    public function index(FilterRequest $request)
     {
         $allproducts = Products::where(function ($query) use ($request) {
             if($request->has('catagory')){
@@ -25,13 +26,19 @@ class ProductController extends Controller
             if($request->has('product_name')){
                 $query->where('product_name', $request->product_name);
             }
-            if($request->has('quantity')){
-                $query->where('quantity', '>=', $request->quantity);
+            if($request->has('quantity_available')){
+                $query->where('quantity_available', '>=', $request->quantity_available);
             }
             if($request->has('price')){
                 $query->where('price', '<=', $request->price);
             }
-        })->get();
+        })->get(['id', 'product_name', 'quantity_available', 'catagory', 'price']);
+        if($allproducts->isEmpty())
+        {
+            return response()->json([
+                "message" => "No such product exists"
+            ]);
+        }
         return $allproducts;
     }
 

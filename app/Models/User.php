@@ -30,4 +30,9 @@ class User extends Authenticatable
     protected $casts = [
         'is_vendor' => 'boolean',
     ];
+
+    public function products()
+    {
+        
+    }
 }

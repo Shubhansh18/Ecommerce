@@ -20,8 +20,7 @@ class UserController extends Controller
     {
         $username = $request->username;
         $password = $request->password;
-
-        $user = User::where('username',$username)->where('password',$password)->first();
+        $user = User::where('username', $username)->where('password',$password)->first();
         if(empty($user))
         {
             return response()->json([

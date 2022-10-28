@@ -23,13 +23,12 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-    Route::get('/cartitems', [TestController::class, 'index']);
     Route::resource('/users', UserController::class)->only('store');
     Route::get('/gettoken', [UserController::class, 'getJWT']);
     Route::post('/password', [UserController::class, 'changePass']);
 
 Route::group(['middleware' => 'UserCheck'], function(){
-    Route::resource('/users', UserController::class)->only('destroy');
+    Route::delete('/delusers', [UserController::class, 'destroy']);
     Route::get('/vendorrequest', [UserController::class, 'makevendor']);
     Route::resource('/products', ProductController::class)->only('index', 'show');
     Route::resource('/cart', CartController::class);

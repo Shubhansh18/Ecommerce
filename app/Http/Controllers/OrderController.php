@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 
 class OrderController extends Controller
 {
@@ -24,7 +25,7 @@ class OrderController extends Controller
         $token = $request->header('Authorization');
         $userdata = JWT::decode($token, new Key('secret', 'HS256'));
         $user = User::where('username', $userdata->username)->first();
-        $bill = Order::where('user_id', $user->id)->get(['quantity', 'order_amount', 'payment_mode', 'expected_arrival']);
+        $bill = Order::where('user_id', $user->id)->get(['order_amount', 'payment_mode', 'expected_arrival']);
         return $bill;
     }
 
@@ -49,18 +50,52 @@ class OrderController extends Controller
         $token = $request->header('Authorization');
         $userdata = JWT::decode($token, new Key('secret', 'HS256'));
         $user = User::where('username', $userdata->username)->first();
-        $cartitems = CartItems::where('user_id', $user->id)->pluck('amount')->toArray();
-        if(empty($cartitems))
+        $cartitems = CartItems::where('user_id', $user->id)->pluck('quantity','product_id')->toArray();
+        ksort($cartitems);
+        if($cartitems==null)
         {
             return response()->json([
                 "message" => "please add items in your cart to order"
             ]);
         }
         else{
-            $price = array_sum($cartitems);
+            $prid = array_keys($cartitems);
+            $products = Products::wherein('id', $prid)->pluck('quantity_available', 'id')->toArray();
+            // dd($cartitems, $products);
+            $qty = array_map(function ($a, $b) {
+                if($a == $b)
+                    return "0"; 
+                if($a < $b){
+                    return ($b-$a);
+                }
+            },$cartitems, $products);
+            $arr = array_combine($prid, $qty);
+            asort($arr);
+            $id = array_keys($arr);
+            $qt = array_values($arr);
+
+            for ($i = 0; $i < count($arr); $i++) {
+                if($qt[$i] == null)
+                {
+                    $product = Products::where(['id' => $id[$i]])->first();
+                    return response()->json([
+                        "Order Status" => "Failed| Your order is not placed, please update your cart to order",
+                        "Message" => "The quantity of ".$product->product_name. " in your cart is more than its quantity available"
+                    ]);
+                }
+                else
+                {
+                    Products::where(['id' => $id[$i]])->update(['quantity_available' => $qt[$i]]);
+                }
+            }
+            $cartamount = CartItems::where('user_id', $user->id)->pluck('amount')->toArray();
+            $price = array_sum($cartamount);
             $data = ['user_id' => $user->id, 'order_amount' => $price, 'expected_arrival' => Carbon::now()->addDays(7)];
             $order = Order::create($data);
-            return $order;
+            return response()->json([
+                "Order Status" => "Success| Your order is successfully placed",
+                "Message" => "The order will be delivered to your doorstep by ".$data['expected_arrival']
+            ]);
         }
     }
 
@@ -126,10 +161,16 @@ class OrderController extends Controller
             return response()->json([
                 "message" => "your order is cancelled"
             ]);
+        };
+        if(Order::find($id) == null)
+        {
+            return response()->json([
+                "message" => "The mentioned order_id is invalid"
+            ]);
         }
         else{
             return response()->json([
-                "message" => "this order can't be cancelled as it is either never placed or is already delivered"
+                "message" => "this order can't be cancelled as it is already delivered"
             ]);
         }
     }

@@ -145,7 +145,7 @@ class CartController extends Controller
             if(empty($cartitems))
             {
                 return response()->json([
-                    "message" => $product->product_name. " is\are not added in your cart"
+                    "message" => $product->product_name. " is|are not added in your cart"
                 ]);
             }
             else{
@@ -165,7 +165,7 @@ class CartController extends Controller
                         "Suggestion" => "Please try reducing the quantity!"
                     ]);
                 }
-                $cartitems->cart_amount = ($product->price) * $data['quantity'];
+                $cartitems->amount = ($product->price) * $data['quantity'];
                 $cartitems->save();
                 $cartitems->update($data);
                 return $cartitems;

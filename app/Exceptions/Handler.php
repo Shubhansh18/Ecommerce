@@ -2,7 +2,12 @@
 
 namespace App\Exceptions;
 
+use App\Http\Requests\FilterRequest;
+use Exception;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Support\Arr;
+use Illuminate\Validation\ValidationException;
+use stdClass;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -45,6 +50,17 @@ class Handler extends ExceptionHandler
     {
         $this->reportable(function (Throwable $e) {
             //
+        });
+        $this->renderable(function (ValidationException $e) {
+            $errors = $e->errors();
+            $val = array();
+            foreach($errors as $value){
+                $val[] = $value;
+            }
+            $message = $e->getMessage();
+            return response()->json([
+                "Message" => Arr::flatten($val)
+            ]);
         });
     }
 }
