@@ -25,7 +25,7 @@ class UserValidation extends FormRequest
     {
         return [
             "name"=>'required|regex:/([A-Za-z])+( [A-Za-z]+)/',
-            "email"=>'required|email|unique:users',
+            "email"=>'required|email:rfc,dns|unique:users',
             "username"=>'required|unique:users|regex:/[A-Z]{1}[a-z]*[0-9]{1,}[a-z]*/',
             "mobile"=>'required|max:10|min:10|regex:/[6789][0-9]{9}/',
             "address"=>'required'

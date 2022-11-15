@@ -26,7 +26,13 @@ class AdminAccess
                 "message" => "Please enter your Auth_key"
             ]);
         }
-        $tokendata = JWT::decode($token, new Key('secret', 'HS256'));
+        try{
+            $tokendata = JWT::decode($token, new Key('secret', 'HS256'));
+        }catch (\Exception $e) {
+            return response()->json([
+                "message" => "Invalid Token!"
+            ]);
+        }
         if($tokendata->username == "Shubhansh18g")
         {
             return $next($request);
